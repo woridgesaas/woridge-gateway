@@ -1,0 +1,74 @@
+services:
+  # --- 1. DATABASE to store Kong configuration---
+  kong-db:
+    image: postgres
+    container_name: woridge-kong_db
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    restart: always
+    networks:
+      - woridge-external-network
+    volumes:
+      - kong_data:/var/lib/postgresql
+
+  # --- 2. MIGRATIONS To populate kong_db with necessary data ---
+  kong-migrations:
+    image: kong:3.4
+    container_name: woridge-kong_migrations
+    command: kong migrations bootstrap            #Run DB migrations to initialize Kong schema
+    depends_on:
+      kong-db:
+        condition: service_healthy
+    environment:
+      KONG_DATABASE: postgres
+      KONG_PG_HOST: kong-db
+      KONG_PG_USER: ${POSTGRES_USER}
+      KONG_PG_PASSWORD: ${POSTGRES_PASSWORD}
+      KONG_PG_DATABASE: ${POSTGRES_DB}
+    networks:
+      - woridge-external-network
+
+  # --- 3. Kong server ---
+  woridge.kong:
+    image: kong:3.4
+    container_name: woridge-gateway_engine
+    depends_on:
+      kong-db:
+        condition: service_healthy
+      kong-migrations:
+        condition: service_completed_successfully
+    environment:
+      KONG_DATABASE: postgres
+      KONG_PG_HOST: kong-db
+      KONG_PG_USER: ${POSTGRES_USER}
+      KONG_PG_PASSWORD: ${KONG_PG_PASSWORD}
+      KONG_PG_DATABASE: ${POSTGRES_DB}
+      KONG_PROXY_ACCESS_LOG: /dev/stdout #files to log
+      KONG_ADMIN_ACCESS_LOG: /dev/stdout
+      KONG_PROXY_ERROR_LOG: /dev/stderr
+      KONG_ADMIN_ERROR_LOG: /dev/stderr
+      KONG_ADMIN_LISTEN: 0.0.0.0:8001, 0.0.0.0:8444 ssl #Admin API http & https
+      KONG_ADMIN_GUI_LISTEN: 0.0.0.0:8002
+      KONG_ADMIN_GUI_URL: http://localhost:8002
+      KONG_ADMIN_GUI_AUTH: "off"
+    ports:
+      - "8000:8000"    # Port(Proxy) for EntryPoint
+      - "8002:8002"   # Port Admin API to use in konga
+      - "8443:8443"    # HTTPS Proxy
+      - "8001:8001"
+    networks:
+      - woridge-external-network
+
+networks:
+  woridge-external-network:
+    external: true
+volumes:
+  kong_data:
+    name: kong_data
