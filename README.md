@@ -23,3 +23,20 @@ This README describes how to deploy the Kong API Gateway with its PostgreSQL dat
 ## Verifying Operation
 1. **Admin GUI** (management web interface): `http://localhost:8002`
 2. Command line: `curl localhost:8001` should return OK 200
+
+## Workflow & Collaboration (decK)
+
+Since Kong’s configuration is stored in the database, we use the **decK** tool to version our routes and plugins on Git via the `kong.yaml` file.
+
+### Export your configuration
+If you have added a service or a plugin via the Dashboard, you must save your changes into the `kong.yaml` file before doing a `git push`:
+
+```bash
+docker-compose run --rm deck dump -o kong.yaml
+```
+
+### Import configuration (Sync)
+After performing a git pull, update your local Gateway with the team’s changes:
+```bash
+docker-compose run --rm deck sync -s kong.yaml
+```
