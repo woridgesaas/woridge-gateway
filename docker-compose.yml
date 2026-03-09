@@ -66,6 +66,20 @@ services:
     networks:
       - woridge-external-network
 
+  #To synchronize work in Interface with others
+  #to synch run deck dump
+  #to retrieve changes when pulled run deck sync
+  deck:
+    image: kong/deck
+    container_name: woridge-deck
+    volumes:
+      - ./:/work
+    working_dir: /work
+    networks:
+      - woridge-external-network
+    environment:
+      DECK_KONG_ADDR: http://woridge.kong:8001
+
 networks:
   woridge-external-network:
     external: true
