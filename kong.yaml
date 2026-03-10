@@ -1,1 +1,35 @@
 _format_version: "3.0"
+
+
+plugins:
+  - name: pre-function
+    config:
+      access:
+        - |
+          local host = kong.request.get_header("Host")
+
+          -- Si pas de Host header
+          if not host then
+            return kong.response.exit(400, { message = "Header Host manquant" })
+          end
+
+          -- Vérifie que le host contient au moins 3 parties
+          -- company-a.woridge.com 
+          -- woridge.com           
+          local parts = {}
+          for part in host:gmatch("[^%.]+") do
+            table.insert(parts, part)
+          end
+
+          if #parts < 3 then
+            return kong.response.exit(400, { 
+              message = "Sous-domaine manquant. Format attendu : tenant.woridge.com" 
+            })
+          end
+
+          -- Extrait la première partie = le tenant
+          local subdomain = parts[1]
+
+          -- Ajoute le header X-Subdomain
+          kong.service.request.set_header("X-Subdomain", subdomain)
+          kong.log.notice("Tenant extrait : " .. subdomain)
