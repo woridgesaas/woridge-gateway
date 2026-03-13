@@ -33,3 +33,78 @@ plugins:
           -- Ajoute le header X-Subdomain
           kong.service.request.set_header("X-Subdomain", subdomain)
           kong.log.notice("Tenant extrait : " .. subdomain)
+
+services:
+
+  - name: ms-authentification
+    url: http://host.docker.internal:5265
+    routes:
+      - name: auth-route
+        paths:
+          - /api
+        strip_path: false
+
+  - name: ms-users
+    url: http://host.docker.internal:8081
+    routes:
+      - name: users-route
+        paths:
+          - /api/internal-users
+        strip_path: false
+
+  - name: ms-notifications
+    url: http://host.docker.internal:5026
+    routes:
+      - name: notifications-route
+        paths:
+          - /api/notification
+        strip_path: false
+        
+# --future--
+  - name: ms-settings
+    url: http://host.docker.internal:8088
+    routes:
+      - name: settings-route
+        paths:
+          - /api/settings
+        strip_path: false
+
+  - name: ms-attendance
+    url: http://host.docker.internal:8082
+    routes:
+      - name: attendance-route
+        paths:
+          - /api/attendance
+        strip_path: false
+
+  - name: ms-administrative-documents
+    url: http://host.docker.internal:8085
+    routes:
+      - name: documents-route
+        paths:
+          - /api/documents
+        strip_path: false
+
+  - name: ms-filtrage-ia
+    url: http://host.docker.internal:8084
+    routes:
+      - name: filtrage-route
+        paths:
+          - /api/ai-filter
+        strip_path: false
+
+  - name: ms-planification-entretiens
+    url: http://host.docker.internal:8083
+    routes:
+      - name: interviews-route
+        paths:
+          - /api/interviews
+        strip_path: false
+
+  - name: ms-canal-diffusion
+    url: http://host.docker.internal:8086
+    routes:
+      - name: broadcast-route
+        paths:
+          - /api/broadcast
+        strip_path: false
