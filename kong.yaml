@@ -13,7 +13,7 @@ plugins:
           end
           -- Si pas de Host header
           if not host then
-            return kong.response.exit(400, { message = "Header Host manquant" })
+            return kong.response.exit(400, { message = "Host header missing" })
           end
           local subdomain
           if host == "localhost" or host == "127.0.0.1" then
@@ -29,7 +29,7 @@ plugins:
           end
           if #parts < 3 then
             return kong.response.exit(400, { 
-              message = "Sous-domaine manquant. Format attendu : tenant.woridge.com" 
+              message = "Missing subdomain. Expected format: tenant.woridge.com" 
             })
           end
           -- Extrait la première partie = le tenant
@@ -37,8 +37,41 @@ plugins:
           end
           -- Ajoute le header X-Subdomain
           kong.service.request.set_header("X-Subdomain", subdomain)
-          kong.log.notice("Tenant Subdomain extracted : " .. subdomain)
-    ##--------------------------CORS------------------------------------------##
+          kong.log.notice("Tenant extracted : " .. subdomain)
+
+
+      
+          local tenants = {
+            ["company-a"] = "ACTIVE",
+            ["company-b"] = "ACTIVE",
+            ["company-c"] = "EXPIRED",
+            ["dev-local"] = "ACTIVE"
+          }
+
+          local status = tenants[subdomain]
+
+          --  Vérification tenant
+
+          if not status then
+            return kong.response.exit(403, {
+              message = "Unknown tenant"
+            })
+          end
+
+          -- Vérification abonnement
+
+          if status ~= "ACTIVE" then
+            return kong.response.exit(403, {
+              message = "Subscription inactive or expired"
+            })
+          end
+
+          -- Ajouter header pour les microservices
+
+          kong.service.request.set_header("X-Tenant-Status", status)
+
+          kong.log.notice("Tenant verified : " .. subdomain)
+
   - name: cors
     instance_name: Angular_Origin
     enabled: true
@@ -72,7 +105,6 @@ plugins:
     protocols:
       - http
       - https
-
 services:
 
   - name: ms-authentification
@@ -147,3 +179,5 @@ services:
         paths:
           - /api/broadcast
         strip_path: false
+
+      
