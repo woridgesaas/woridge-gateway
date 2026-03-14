@@ -10,7 +10,7 @@ plugins:
 
           -- Si pas de Host header
           if not host then
-            return kong.response.exit(400, { message = "Header Host manquant" })
+            return kong.response.exit(400, { message = "Host header missing" })
           end
 
           -- Vérifie que le host contient au moins 3 parties
@@ -23,7 +23,7 @@ plugins:
 
           if #parts < 3 then
             return kong.response.exit(400, { 
-              message = "Sous-domaine manquant. Format attendu : tenant.woridge.com" 
+              message = "Missing subdomain. Expected format: tenant.woridge.com" 
             })
           end
 
@@ -32,7 +32,41 @@ plugins:
 
           -- Ajoute le header X-Subdomain
           kong.service.request.set_header("X-Subdomain", subdomain)
-          kong.log.notice("Tenant extrait : " .. subdomain)
+          kong.log.notice("Tenant extracted : " .. subdomain)
+
+         ------------------------------------------------
+      
+          local tenants = {
+            ["company-a"] = "ACTIVE",
+            ["company-b"] = "ACTIVE",
+            ["company-c"] = "EXPIRED",
+            ["company-d"] = "INACTIVE"
+          }
+
+          local status = tenants[subdomain]
+
+          --  Vérification tenant
+
+          if not status then
+            return kong.response.exit(403, {
+              message = "Unknown tenant"
+            })
+          end
+
+          -- Vérification abonnement
+
+          if status ~= "ACTIVE" then
+            return kong.response.exit(403, {
+              message = "Subscription inactive or expired"
+            })
+          end
+
+          -- Ajouter header pour les microservices
+
+          kong.service.request.set_header("X-Tenant-Status", status)
+
+          kong.log.notice("Tenant verified : " .. subdomain)
+
 
 services:
 
@@ -108,3 +142,5 @@ services:
         paths:
           - /api/broadcast
         strip_path: false
+
+      
