@@ -7,12 +7,19 @@ plugins:
       access:
         - |
           local host = kong.request.get_header("Host")
-
+          host = host:gsub(":%d+$", "") --Eschape port
+          if kong.request.get_method() == "OPTIONS" then
+              return
+          end
           -- Si pas de Host header
           if not host then
             return kong.response.exit(400, { message = "Host header missing" })
           end
-
+          local subdomain
+          if host == "localhost" or host == "127.0.0.1" then
+            subdomain = "dev-local"
+          else
+          kong.log.notice("Recieving a request from host : " .. host)
           -- Vérifie que le host contient au moins 3 parties
           -- company-a.woridge.com 
           -- woridge.com           
@@ -20,27 +27,25 @@ plugins:
           for part in host:gmatch("[^%.]+") do
             table.insert(parts, part)
           end
-
           if #parts < 3 then
             return kong.response.exit(400, { 
               message = "Missing subdomain. Expected format: tenant.woridge.com" 
             })
           end
-
           -- Extrait la première partie = le tenant
-          local subdomain = parts[1]
-
+          subdomain = parts[1]
+          end
           -- Ajoute le header X-Subdomain
           kong.service.request.set_header("X-Subdomain", subdomain)
           kong.log.notice("Tenant extracted : " .. subdomain)
 
-         ------------------------------------------------
+
       
           local tenants = {
             ["company-a"] = "ACTIVE",
             ["company-b"] = "ACTIVE",
             ["company-c"] = "EXPIRED",
-            ["company-d"] = "INACTIVE"
+            ["dev-local"] = "ACTIVE"
           }
 
           local status = tenants[subdomain]
@@ -67,7 +72,39 @@ plugins:
 
           kong.log.notice("Tenant verified : " .. subdomain)
 
-
+  - name: cors
+    instance_name: Angular_Origin
+    enabled: true
+    tags:
+      - CORS
+      - Angular
+    config:
+      origins:
+        - http://localhost:4200
+        - http://entreprise.woridge.com:4200
+      methods:
+        - GET
+        - POST
+        - PUT
+        - PATCH
+        - DELETE
+        - OPTIONS
+        - HEAD
+      headers:
+        - Authorization
+        - Content-Type
+        - Accept
+        - Origin
+        - X-Subdomain
+      exposed_headers:
+        - Content-Disposition
+        - X-Auth-Token
+      credentials: true
+      preflight_continue: false
+      max_age: 3600
+    protocols:
+      - http
+      - https
 services:
 
   - name: ms-authentification
