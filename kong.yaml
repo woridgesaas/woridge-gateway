@@ -1,76 +1,14 @@
 _format_version: "3.0"
 
-
 plugins:
-  - name: pre-function
-    config:
-      access:
-        - |
-          local host = kong.request.get_header("Host")
-          host = host:gsub(":%d+$", "") --Eschape port
-          if kong.request.get_method() == "OPTIONS" then
-              return
-          end
-          -- Si pas de Host header
-          if not host then
-            return kong.response.exit(400, { message = "Host header missing" })
-          end
-          local subdomain
-          if host == "localhost" or host == "127.0.0.1" then
-            subdomain = "dev-local"
-          else
-          kong.log.notice("Recieving a request from host : " .. host)
-          -- Vérifie que le host contient au moins 3 parties
-          -- company-a.woridge.com 
-          -- woridge.com           
-          local parts = {}
-          for part in host:gmatch("[^%.]+") do
-            table.insert(parts, part)
-          end
-          if #parts < 3 then
-            return kong.response.exit(400, { 
-              message = "Missing subdomain. Expected format: tenant.woridge.com" 
-            })
-          end
-          -- Extrait la première partie = le tenant
-          subdomain = parts[1]
-          end
-          -- Ajoute le header X-Subdomain
-          kong.service.request.set_header("X-Subdomain", subdomain)
-          kong.log.notice("Tenant extracted : " .. subdomain)
 
+  - name: tenant
 
-      
-          local tenants = {
-            ["company-a"] = "ACTIVE",
-            ["company-b"] = "ACTIVE",
-            ["company-c"] = "EXPIRED",
-            ["dev-local"] = "ACTIVE"
-          }
+  - name: subscription
 
-          local status = tenants[subdomain]
+  - name: authentication
 
-          --  Vérification tenant
-
-          if not status then
-            return kong.response.exit(403, {
-              message = "Unknown tenant"
-            })
-          end
-
-          -- Vérification abonnement
-
-          if status ~= "ACTIVE" then
-            return kong.response.exit(403, {
-              message = "Subscription inactive or expired"
-            })
-          end
-
-          -- Ajouter header pour les microservices
-
-          kong.service.request.set_header("X-Tenant-Status", status)
-
-          kong.log.notice("Tenant verified : " .. subdomain)
+  - name: authorization
 
   - name: cors
     instance_name: Angular_Origin
@@ -105,8 +43,8 @@ plugins:
     protocols:
       - http
       - https
-services:
 
+services:
   - name: ms-authentification
     url: http://host.docker.internal:5265
     routes:
@@ -130,8 +68,8 @@ services:
         paths:
           - /api/notification
         strip_path: false
-        
-# --future--
+
+  # --future--
   - name: ms-settings
     url: http://host.docker.internal:8088
     routes:
@@ -179,5 +117,3 @@ services:
         paths:
           - /api/broadcast
         strip_path: false
-
-      

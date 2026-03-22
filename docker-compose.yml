@@ -8,7 +8,7 @@ services:
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
       POSTGRES_DB: ${POSTGRES_DB}
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      test: [ "CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}" ]
       interval: 5s
       timeout: 5s
       retries: 5
@@ -20,9 +20,11 @@ services:
 
   # --- 2. MIGRATIONS To populate kong_db with necessary data ---
   kong-migrations:
-    image: kong:3.4
+    build:
+      context: .
+      dockerfile: infra/Dockerfile
     container_name: woridge-kong_migrations
-    command: kong migrations bootstrap            #Run DB migrations to initialize Kong schema
+    command: kong migrations bootstrap #Run DB migrations to initialize Kong schema
     depends_on:
       kong-db:
         condition: service_healthy
@@ -37,34 +39,58 @@ services:
 
   # --- 3. Kong server ---
   woridge.kong:
-    image: kong:3.4
+    build:
+      context: .
+      dockerfile: infra/Dockerfile
     container_name: woridge-gateway_engine
+
     depends_on:
       kong-db:
         condition: service_healthy
       kong-migrations:
         condition: service_completed_successfully
+
     environment:
       KONG_DATABASE: postgres
       KONG_PG_HOST: kong-db
       KONG_PG_USER: ${POSTGRES_USER}
-      KONG_PG_PASSWORD: ${KONG_PG_PASSWORD}
+      KONG_PG_PASSWORD: ${POSTGRES_PASSWORD}
       KONG_PG_DATABASE: ${POSTGRES_DB}
-      KONG_PROXY_ACCESS_LOG: /dev/stdout #files to log
+
+      KONG_PLUGINS: bundled,tenant,subscription,authentication,authorization
+      KONG_LUA_PACKAGE_PATH: /usr/local/share/lua/5.1/?.lua;;
+
+      JWT_SECRET_KEY: ${JWT_SECRET_KEY}
+      AUTH_SERVICE_URL: ${AUTH_SERVICE_URL}
+      INTERNAL_SECRET_KEY: ${INTERNAL_SECRET_KEY}
+
+      KONG_PROXY_ACCESS_LOG: /dev/stdout
       KONG_ADMIN_ACCESS_LOG: /dev/stdout
       KONG_PROXY_ERROR_LOG: /dev/stderr
       KONG_ADMIN_ERROR_LOG: /dev/stderr
-      KONG_ADMIN_LISTEN: 0.0.0.0:8001, 0.0.0.0:8444 ssl #Admin API http & https
+
+      KONG_ADMIN_LISTEN: 0.0.0.0:8001
       KONG_ADMIN_GUI_LISTEN: 0.0.0.0:8002
       KONG_ADMIN_GUI_URL: http://localhost:8002
       KONG_ADMIN_GUI_AUTH: "off"
+
     ports:
-      - "8000:8000"    # Port(Proxy) for EntryPoint
-      - "8002:8002"   # Port Admin API to use in konga
-      - "8443:8443"    # HTTPS Proxy
+      - "8000:8000"
+      - "8002:8002"
+      - "8443:8443"
       - "8001:8001"
+
     networks:
       - woridge-external-network
+
+    volumes:
+      # Mount each plugin directly into Kong's plugin directory
+      - ./plugins/tenant:/usr/local/share/lua/5.1/kong/plugins/tenant
+      - ./plugins/subscription:/usr/local/share/lua/5.1/kong/plugins/subscription
+      - ./plugins/authentication:/usr/local/share/lua/5.1/kong/plugins/authentication
+      - ./plugins/authorization:/usr/local/share/lua/5.1/kong/plugins/authorization
+      #  Mount shared config as a reachable Lua module
+      - ./plugins/config:/usr/local/share/lua/5.1/kong/plugins/config
 
   #To synchronize work in Interface with others
   #to synch run deck dump
