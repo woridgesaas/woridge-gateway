@@ -1,7 +1,6 @@
 _format_version: "3.0"
 
 plugins:
-
   - name: tenant
 
   - name: subscription
@@ -52,6 +51,54 @@ services:
         paths:
           - /api
         strip_path: false
+
+      - name: login-route
+        paths:
+          - /api/auth
+        methods:
+          - POST
+        strip_path: false
+        plugins:
+          - name: rate-limiting
+            config:
+              minute: 3 #* max 3 login attempts per minute per IP
+              hour: 10 #* max 10 per hour per IP
+              policy: local
+              limit_by: ip
+              error_code: 429
+              error_message: "Too many attempts. Please try again later"
+
+      - name: request-reset-password-route
+        paths:
+          - /api/auth/request
+        methods:
+          - POST
+        strip_path: false
+        plugins:
+          - name: rate-limiting
+            config:
+              minute: 2 #* max 2 password reset requests per minute per IP
+              hour: 5 #* max 5 per hour per IP
+              policy: local
+              limit_by: ip
+              error_code: 429
+              error_message: "Too many attempts. Please try again later"
+
+      - name: verify-otp-code-route
+        paths:
+          - /api/auth/verify
+        methods:
+          - POST
+        strip_path: false
+        plugins:
+          - name: rate-limiting
+            config:
+              minute: 3 #* max 3 OTP verification attempts per minute per IP
+              hour: 6 #* max 6 per hour per IP
+              policy: local
+              limit_by: ip
+              error_code: 429
+              error_message: "Too many attempts. Please try again later"
 
   - name: ms-users
     url: http://host.docker.internal:8081
