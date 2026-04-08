@@ -139,16 +139,16 @@ services:
           - /api/ai-filter
         strip_path: false
 
-  - name: ms-planification-entretiens
-    url: http://host.docker.internal:8083
-    routes:
-      - name: interviews-route
-        paths:
-          - /api/interviews
-        strip_path: false
+  # - name: ms-planification-entretiens
+  #   url: http://host.docker.internal:8083
+  #   routes:
+  #     - name: interviews-route
+  #       paths:
+  #         - /api/interviews
+  #       strip_path: false
 
   - name: ms-canal-diffusion
-    url: http://host.docker.internal:8086
+    url: http://host.docker.internal:8088
     routes:
       - name: broadcast-route
         paths:
@@ -181,4 +181,28 @@ services:
       - name: facebook-oauth-route
         paths:
           - /api/auth/facebook
+        strip_path: false
+
+  - name: ms-planification-entretiens
+    url: http://host.docker.internal:5034  #8086
+    routes:
+      - name: interviews-route
+        paths:
+          - /api/interviews
+        strip_path: false
+      - name: interviewers-route     
+        paths:
+          - /api/interviewers
+        strip_path: false
+      - name: participants-route
+        paths:
+          - /api/participants
+        strip_path: false
+      - name: evaluations-route
+        paths:
+          - /api/evaluations
+        strip_path: false
+      - name: availabilities-route
+        paths:
+          - /api/availabilities
         strip_path: false
