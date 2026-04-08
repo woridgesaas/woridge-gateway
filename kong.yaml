@@ -1,14 +1,9 @@
 _format_version: "3.0"
-
 plugins:
   - name: tenant
-
   - name: subscription
-
   - name: authentication
-
   - name: authorization
-
   - name: cors
     instance_name: Angular_Origin
     enabled: true
@@ -42,7 +37,6 @@ plugins:
     protocols:
       - http
       - https
-
 services:
   - name: ms-authentification
     url: http://host.docker.internal:5265
@@ -51,7 +45,6 @@ services:
         paths:
           - /api
         strip_path: false
-
       - name: login-route
         paths:
           - /api/auth
@@ -61,13 +54,12 @@ services:
         plugins:
           - name: rate-limiting
             config:
-              minute: 3 #* max 3 login attempts per minute per IP
-              hour: 10 #* max 10 per hour per IP
+              minute: 3
+              hour: 10
               policy: local
               limit_by: ip
               error_code: 429
               error_message: "Too many attempts. Please try again later"
-
       - name: request-reset-password-route
         paths:
           - /api/auth/request
@@ -77,13 +69,12 @@ services:
         plugins:
           - name: rate-limiting
             config:
-              minute: 2 #* max 2 password reset requests per minute per IP
-              hour: 5 #* max 5 per hour per IP
+              minute: 2
+              hour: 5
               policy: local
               limit_by: ip
               error_code: 429
               error_message: "Too many attempts. Please try again later"
-
       - name: verify-otp-code-route
         paths:
           - /api/auth/verify
@@ -93,8 +84,8 @@ services:
         plugins:
           - name: rate-limiting
             config:
-              minute: 3 #* max 3 OTP verification attempts per minute per IP
-              hour: 6 #* max 6 per hour per IP
+              minute: 3
+              hour: 6
               policy: local
               limit_by: ip
               error_code: 429
@@ -116,7 +107,6 @@ services:
           - /api/notification
         strip_path: false
 
-  # --future--
   - name: ms-settings
     url: http://host.docker.internal:8088
     routes:
@@ -149,18 +139,70 @@ services:
           - /api/ai-filter
         strip_path: false
 
+  # - name: ms-planification-entretiens
+  #   url: http://host.docker.internal:8083
+  #   routes:
+  #     - name: interviews-route
+  #       paths:
+  #         - /api/interviews
+  #       strip_path: false
+
+  - name: ms-canal-diffusion
+    url: http://host.docker.internal:8088
+    routes:
+      - name: broadcast-route
+        paths:
+          - /api/broadcast
+        strip_path: false
+
+  - name: ms-job-offer-management
+    url: http://host.docker.internal:5196
+    routes:
+      - name: job-offers-route
+        paths:
+          - /api/joboffers
+        strip_path: false
+      - name: job-types-route
+        paths:
+          - /api/jobtypes
+        strip_path: false
+      - name: canals-route
+        paths:
+          - /api/canals
+        strip_path: false
+      - name: indeed-feed-route
+        paths:
+          - /api/feed
+        strip_path: false
+      - name: linkedin-oauth-route
+        paths:
+          - /api/auth/linkedin
+        strip_path: false
+      - name: facebook-oauth-route
+        paths:
+          - /api/auth/facebook
+        strip_path: false
+
   - name: ms-planification-entretiens
-    url: http://host.docker.internal:8083
+    url: http://host.docker.internal:5034  #8086
     routes:
       - name: interviews-route
         paths:
           - /api/interviews
         strip_path: false
-
-  - name: ms-canal-diffusion
-    url: http://host.docker.internal:8086
-    routes:
-      - name: broadcast-route
+      - name: interviewers-route     
         paths:
-          - /api/broadcast
+          - /api/interviewers
+        strip_path: false
+      - name: participants-route
+        paths:
+          - /api/participants
+        strip_path: false
+      - name: evaluations-route
+        paths:
+          - /api/evaluations
+        strip_path: false
+      - name: availabilities-route
+        paths:
+          - /api/availabilities
         strip_path: false
