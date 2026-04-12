@@ -206,3 +206,15 @@ services:
         paths:
           - /api/availabilities
         strip_path: false
+
+  - name: ms-chatbot
+    url: http://host.docker.internal:8089
+    routes:
+      - name: chatbot-route
+        paths:
+          - /api/chat
+        strip_path: false
+      - name: ingestion-route
+        paths:
+          - /api/ingestion
+        strip_path: false
