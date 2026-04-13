@@ -1,220 +1,624 @@
 _format_version: "3.0"
 plugins:
-  - name: tenant
-  - name: subscription
-  - name: authentication
-  - name: authorization
-  - name: cors
-    instance_name: Angular_Origin
-    enabled: true
-    tags:
-      - CORS
-      - Angular
-    config:
-      origins:
-        - http://localhost:4200
-        - http://entreprise.woridge.com:4200
-      methods:
-        - GET
-        - POST
-        - PUT
-        - PATCH
-        - DELETE
-        - OPTIONS
-        - HEAD
-      headers:
-        - Authorization
-        - Content-Type
-        - Accept
-        - Origin
-        - X-Subdomain
-      exposed_headers:
-        - Content-Disposition
-        - X-Auth-Token
-      credentials: true
-      preflight_continue: false
-      max_age: 3600
+- enabled: true
+  name: authentication
+  protocols:
+  - grpc
+  - grpcs
+  - http
+  - https
+- enabled: true
+  name: authorization
+  protocols:
+  - grpc
+  - grpcs
+  - http
+  - https
+- config:
+    credentials: true
+    exposed_headers:
+    - Content-Disposition
+    - X-Auth-Token
+    headers:
+    - Authorization
+    - Content-Type
+    - Accept
+    - Origin
+    - X-Subdomain
+    max_age: 3600
+    methods:
+    - GET
+    - POST
+    - PUT
+    - PATCH
+    - DELETE
+    - OPTIONS
+    - HEAD
+    origins:
+    - http://localhost:4200
+    - http://entreprise.woridge.com:4200
+    preflight_continue: false
+  enabled: true
+  instance_name: Angular_Origin
+  name: cors
+  protocols:
+  - http
+  - https
+  tags:
+  - CORS
+  - Angular
+- enabled: true
+  name: subscription
+  protocols:
+  - grpc
+  - grpcs
+  - http
+  - https
+- enabled: true
+  name: tenant
+  protocols:
+  - grpc
+  - grpcs
+  - http
+  - https
+services:
+- connect_timeout: 60000
+  enabled: true
+  host: host.docker.internal
+  name: ms-administrative-documents
+  port: 8085
+  protocol: http
+  read_timeout: 60000
+  retries: 5
+  routes:
+  - https_redirect_status_code: 426
+    name: documents-route
+    path_handling: v0
+    paths:
+    - /api/documents
+    preserve_host: false
     protocols:
+    - http
+    - https
+    regex_priority: 0
+    request_buffering: true
+    response_buffering: true
+    strip_path: false
+  write_timeout: 60000
+- connect_timeout: 60000
+  enabled: true
+  host: host.docker.internal
+  name: ms-attendance
+  port: 8082
+  protocol: http
+  read_timeout: 60000
+  retries: 5
+  routes:
+  - https_redirect_status_code: 426
+    name: attendance-route
+    path_handling: v0
+    paths:
+    - /api/attendance
+    preserve_host: false
+    protocols:
+    - http
+    - https
+    regex_priority: 0
+    request_buffering: true
+    response_buffering: true
+    strip_path: false
+  write_timeout: 60000
+- connect_timeout: 60000
+  enabled: true
+  host: woridge.ms-audit.nginx
+  name: ms-audit-engine
+  port: 80
+  protocol: http
+  read_timeout: 60000
+  retries: 5
+  routes:
+  - https_redirect_status_code: 426
+    methods:
+    - GET
+    - OPTIONS
+    - CONNECT
+    - TRACE
+    name: audit-route
+    path_handling: v0
+    paths:
+    - /api/v1/audits
+    preserve_host: false
+    protocols:
+    - http
+    - https
+    regex_priority: 0
+    request_buffering: true
+    response_buffering: true
+    strip_path: false
+    tags:
+    - default
+  tags:
+  - audit
+  - exposed API
+  write_timeout: 60000
+- connect_timeout: 60000
+  enabled: true
+  host: host.docker.internal
+  name: ms-authentification
+  port: 5265
+  protocol: http
+  read_timeout: 60000
+  retries: 5
+  routes:
+  - https_redirect_status_code: 426
+    name: auth-route
+    path_handling: v0
+    paths:
+    - /api
+    preserve_host: false
+    protocols:
+    - http
+    - https
+    regex_priority: 0
+    request_buffering: true
+    response_buffering: true
+    strip_path: false
+  - https_redirect_status_code: 426
+    methods:
+    - POST
+    name: login-route
+    path_handling: v0
+    paths:
+    - /api/auth
+    plugins:
+    - config:
+        day: null
+        error_code: 429
+        error_message: Too many attempts. Please try again later
+        fault_tolerant: true
+        header_name: null
+        hide_client_headers: false
+        hour: 10
+        limit_by: ip
+        minute: 3
+        month: null
+        path: null
+        policy: local
+        redis_database: 0
+        redis_host: null
+        redis_password: null
+        redis_port: 6379
+        redis_server_name: null
+        redis_ssl: false
+        redis_ssl_verify: false
+        redis_timeout: 2000
+        redis_username: null
+        second: null
+        sync_rate: -1
+        year: null
+      enabled: true
+      name: rate-limiting
+      protocols:
+      - grpc
+      - grpcs
       - http
       - https
-services:
-  - name: ms-authentification
-    url: http://host.docker.internal:5265
-    routes:
-      - name: auth-route
-        paths:
-          - /api
-        strip_path: false
-      - name: login-route
-        paths:
-          - /api/auth
-        methods:
-          - POST
-        strip_path: false
-        plugins:
-          - name: rate-limiting
-            config:
-              minute: 3
-              hour: 10
-              policy: local
-              limit_by: ip
-              error_code: 429
-              error_message: "Too many attempts. Please try again later"
-      - name: request-reset-password-route
-        paths:
-          - /api/auth/request
-        methods:
-          - POST
-        strip_path: false
-        plugins:
-          - name: rate-limiting
-            config:
-              minute: 2
-              hour: 5
-              policy: local
-              limit_by: ip
-              error_code: 429
-              error_message: "Too many attempts. Please try again later"
-      - name: verify-otp-code-route
-        paths:
-          - /api/auth/verify
-        methods:
-          - POST
-        strip_path: false
-        plugins:
-          - name: rate-limiting
-            config:
-              minute: 3
-              hour: 6
-              policy: local
-              limit_by: ip
-              error_code: 429
-              error_message: "Too many attempts. Please try again later"
-
-  - name: ms-users
-    url: http://host.docker.internal:8081
-    routes:
-      - name: users-route
-        paths:
-          - /api/internal-users
-        strip_path: false
-
-  - name: ms-notifications
-    url: http://host.docker.internal:5026
-    routes:
-      - name: notifications-route
-        paths:
-          - /api/notification
-        strip_path: false
-
-  - name: ms-settings
-    url: http://host.docker.internal:8088
-    routes:
-      - name: settings-route
-        paths:
-          - /api/settings
-        strip_path: false
-
-  - name: ms-attendance
-    url: http://host.docker.internal:8082
-    routes:
-      - name: attendance-route
-        paths:
-          - /api/attendance
-        strip_path: false
-
-  - name: ms-administrative-documents
-    url: http://host.docker.internal:8085
-    routes:
-      - name: documents-route
-        paths:
-          - /api/documents
-        strip_path: false
-
-  - name: ms-filtrage-ia
-    url: http://host.docker.internal:8084
-    routes:
-      - name: filtrage-route
-        paths:
-          - /api/ai-filter
-        strip_path: false
-
-  # - name: ms-planification-entretiens
-  #   url: http://host.docker.internal:8083
-  #   routes:
-  #     - name: interviews-route
-  #       paths:
-  #         - /api/interviews
-  #       strip_path: false
-
-  - name: ms-canal-diffusion
-    url: http://host.docker.internal:8088
-    routes:
-      - name: broadcast-route
-        paths:
-          - /api/broadcast
-        strip_path: false
-
-  - name: ms-job-offer-management
-    url: http://host.docker.internal:5196
-    routes:
-      - name: job-offers-route
-        paths:
-          - /api/joboffers
-        strip_path: false
-      - name: job-types-route
-        paths:
-          - /api/jobtypes
-        strip_path: false
-      - name: canals-route
-        paths:
-          - /api/canals
-        strip_path: false
-      - name: indeed-feed-route
-        paths:
-          - /api/feed
-        strip_path: false
-      - name: linkedin-oauth-route
-        paths:
-          - /api/auth/linkedin
-        strip_path: false
-      - name: facebook-oauth-route
-        paths:
-          - /api/auth/facebook
-        strip_path: false
-
-  - name: ms-planification-entretiens
-    url: http://host.docker.internal:5034  #8086
-    routes:
-      - name: interviews-route
-        paths:
-          - /api/interviews
-        strip_path: false
-      - name: interviewers-route     
-        paths:
-          - /api/interviewers
-        strip_path: false
-      - name: participants-route
-        paths:
-          - /api/participants
-        strip_path: false
-      - name: evaluations-route
-        paths:
-          - /api/evaluations
-        strip_path: false
-      - name: availabilities-route
-        paths:
-          - /api/availabilities
-        strip_path: false
-
-  - name: ms-chatbot
-    url: http://host.docker.internal:8089
-    routes:
-      - name: chatbot-route
-        paths:
-          - /api/chat
-        strip_path: false
-      - name: ingestion-route
-        paths:
-          - /api/ingestion
-        strip_path: false
+    preserve_host: false
+    protocols:
+    - http
+    - https
+    regex_priority: 0
+    request_buffering: true
+    response_buffering: true
+    strip_path: false
+  - https_redirect_status_code: 426
+    methods:
+    - POST
+    name: request-reset-password-route
+    path_handling: v0
+    paths:
+    - /api/auth/request
+    plugins:
+    - config:
+        day: null
+        error_code: 429
+        error_message: Too many attempts. Please try again later
+        fault_tolerant: true
+        header_name: null
+        hide_client_headers: false
+        hour: 5
+        limit_by: ip
+        minute: 2
+        month: null
+        path: null
+        policy: local
+        redis_database: 0
+        redis_host: null
+        redis_password: null
+        redis_port: 6379
+        redis_server_name: null
+        redis_ssl: false
+        redis_ssl_verify: false
+        redis_timeout: 2000
+        redis_username: null
+        second: null
+        sync_rate: -1
+        year: null
+      enabled: true
+      name: rate-limiting
+      protocols:
+      - grpc
+      - grpcs
+      - http
+      - https
+    preserve_host: false
+    protocols:
+    - http
+    - https
+    regex_priority: 0
+    request_buffering: true
+    response_buffering: true
+    strip_path: false
+  - https_redirect_status_code: 426
+    methods:
+    - POST
+    name: verify-otp-code-route
+    path_handling: v0
+    paths:
+    - /api/auth/verify
+    plugins:
+    - config:
+        day: null
+        error_code: 429
+        error_message: Too many attempts. Please try again later
+        fault_tolerant: true
+        header_name: null
+        hide_client_headers: false
+        hour: 6
+        limit_by: ip
+        minute: 3
+        month: null
+        path: null
+        policy: local
+        redis_database: 0
+        redis_host: null
+        redis_password: null
+        redis_port: 6379
+        redis_server_name: null
+        redis_ssl: false
+        redis_ssl_verify: false
+        redis_timeout: 2000
+        redis_username: null
+        second: null
+        sync_rate: -1
+        year: null
+      enabled: true
+      name: rate-limiting
+      protocols:
+      - grpc
+      - grpcs
+      - http
+      - https
+    preserve_host: false
+    protocols:
+    - http
+    - https
+    regex_priority: 0
+    request_buffering: true
+    response_buffering: true
+    strip_path: false
+  write_timeout: 60000
+- connect_timeout: 60000
+  enabled: true
+  host: host.docker.internal
+  name: ms-canal-diffusion
+  port: 8088
+  protocol: http
+  read_timeout: 60000
+  retries: 5
+  routes:
+  - https_redirect_status_code: 426
+    name: broadcast-route
+    path_handling: v0
+    paths:
+    - /api/broadcast
+    preserve_host: false
+    protocols:
+    - http
+    - https
+    regex_priority: 0
+    request_buffering: true
+    response_buffering: true
+    strip_path: false
+  write_timeout: 60000
+- connect_timeout: 60000
+  enabled: true
+  host: host.docker.internal
+  name: ms-chatbot
+  port: 8089
+  protocol: http
+  read_timeout: 60000
+  retries: 5
+  routes:
+  - https_redirect_status_code: 426
+    name: chatbot-route
+    path_handling: v0
+    paths:
+    - /api/chat
+    preserve_host: false
+    protocols:
+    - http
+    - https
+    regex_priority: 0
+    request_buffering: true
+    response_buffering: true
+    strip_path: false
+  - https_redirect_status_code: 426
+    name: ingestion-route
+    path_handling: v0
+    paths:
+    - /api/ingestion
+    preserve_host: false
+    protocols:
+    - http
+    - https
+    regex_priority: 0
+    request_buffering: true
+    response_buffering: true
+    strip_path: false
+  write_timeout: 60000
+- connect_timeout: 60000
+  enabled: true
+  host: host.docker.internal
+  name: ms-filtrage-ia
+  port: 8084
+  protocol: http
+  read_timeout: 60000
+  retries: 5
+  routes:
+  - https_redirect_status_code: 426
+    name: filtrage-route
+    path_handling: v0
+    paths:
+    - /api/ai-filter
+    preserve_host: false
+    protocols:
+    - http
+    - https
+    regex_priority: 0
+    request_buffering: true
+    response_buffering: true
+    strip_path: false
+  write_timeout: 60000
+- connect_timeout: 60000
+  enabled: true
+  host: host.docker.internal
+  name: ms-job-offer-management
+  port: 5196
+  protocol: http
+  read_timeout: 60000
+  retries: 5
+  routes:
+  - https_redirect_status_code: 426
+    name: canals-route
+    path_handling: v0
+    paths:
+    - /api/canals
+    preserve_host: false
+    protocols:
+    - http
+    - https
+    regex_priority: 0
+    request_buffering: true
+    response_buffering: true
+    strip_path: false
+  - https_redirect_status_code: 426
+    name: facebook-oauth-route
+    path_handling: v0
+    paths:
+    - /api/auth/facebook
+    preserve_host: false
+    protocols:
+    - http
+    - https
+    regex_priority: 0
+    request_buffering: true
+    response_buffering: true
+    strip_path: false
+  - https_redirect_status_code: 426
+    name: indeed-feed-route
+    path_handling: v0
+    paths:
+    - /api/feed
+    preserve_host: false
+    protocols:
+    - http
+    - https
+    regex_priority: 0
+    request_buffering: true
+    response_buffering: true
+    strip_path: false
+  - https_redirect_status_code: 426
+    name: job-offers-route
+    path_handling: v0
+    paths:
+    - /api/joboffers
+    preserve_host: false
+    protocols:
+    - http
+    - https
+    regex_priority: 0
+    request_buffering: true
+    response_buffering: true
+    strip_path: false
+  - https_redirect_status_code: 426
+    name: job-types-route
+    path_handling: v0
+    paths:
+    - /api/jobtypes
+    preserve_host: false
+    protocols:
+    - http
+    - https
+    regex_priority: 0
+    request_buffering: true
+    response_buffering: true
+    strip_path: false
+  - https_redirect_status_code: 426
+    name: linkedin-oauth-route
+    path_handling: v0
+    paths:
+    - /api/auth/linkedin
+    preserve_host: false
+    protocols:
+    - http
+    - https
+    regex_priority: 0
+    request_buffering: true
+    response_buffering: true
+    strip_path: false
+  write_timeout: 60000
+- connect_timeout: 60000
+  enabled: true
+  host: host.docker.internal
+  name: ms-notifications
+  port: 5026
+  protocol: http
+  read_timeout: 60000
+  retries: 5
+  routes:
+  - https_redirect_status_code: 426
+    name: notifications-route
+    path_handling: v0
+    paths:
+    - /api/notification
+    preserve_host: false
+    protocols:
+    - http
+    - https
+    regex_priority: 0
+    request_buffering: true
+    response_buffering: true
+    strip_path: false
+  write_timeout: 60000
+- connect_timeout: 60000
+  enabled: true
+  host: host.docker.internal
+  name: ms-planification-entretiens
+  port: 5034
+  protocol: http
+  read_timeout: 60000
+  retries: 5
+  routes:
+  - https_redirect_status_code: 426
+    name: availabilities-route
+    path_handling: v0
+    paths:
+    - /api/availabilities
+    preserve_host: false
+    protocols:
+    - http
+    - https
+    regex_priority: 0
+    request_buffering: true
+    response_buffering: true
+    strip_path: false
+  - https_redirect_status_code: 426
+    name: evaluations-route
+    path_handling: v0
+    paths:
+    - /api/evaluations
+    preserve_host: false
+    protocols:
+    - http
+    - https
+    regex_priority: 0
+    request_buffering: true
+    response_buffering: true
+    strip_path: false
+  - https_redirect_status_code: 426
+    name: interviewers-route
+    path_handling: v0
+    paths:
+    - /api/interviewers
+    preserve_host: false
+    protocols:
+    - http
+    - https
+    regex_priority: 0
+    request_buffering: true
+    response_buffering: true
+    strip_path: false
+  - https_redirect_status_code: 426
+    name: interviews-route
+    path_handling: v0
+    paths:
+    - /api/interviews
+    preserve_host: false
+    protocols:
+    - http
+    - https
+    regex_priority: 0
+    request_buffering: true
+    response_buffering: true
+    strip_path: false
+  - https_redirect_status_code: 426
+    name: participants-route
+    path_handling: v0
+    paths:
+    - /api/participants
+    preserve_host: false
+    protocols:
+    - http
+    - https
+    regex_priority: 0
+    request_buffering: true
+    response_buffering: true
+    strip_path: false
+  write_timeout: 60000
+- connect_timeout: 60000
+  enabled: true
+  host: host.docker.internal
+  name: ms-settings
+  port: 8088
+  protocol: http
+  read_timeout: 60000
+  retries: 5
+  routes:
+  - https_redirect_status_code: 426
+    name: settings-route
+    path_handling: v0
+    paths:
+    - /api/settings
+    preserve_host: false
+    protocols:
+    - http
+    - https
+    regex_priority: 0
+    request_buffering: true
+    response_buffering: true
+    strip_path: false
+  write_timeout: 60000
+- connect_timeout: 60000
+  enabled: true
+  host: host.docker.internal
+  name: ms-users
+  port: 8081
+  protocol: http
+  read_timeout: 60000
+  retries: 5
+  routes:
+  - https_redirect_status_code: 426
+    name: users-route
+    path_handling: v0
+    paths:
+    - /api/internal-users
+    preserve_host: false
+    protocols:
+    - http
+    - https
+    regex_priority: 0
+    request_buffering: true
+    response_buffering: true
+    strip_path: false
+  write_timeout: 60000
