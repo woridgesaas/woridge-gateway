@@ -30,6 +30,9 @@ local ROUTE_ACCESS_POLICY = {
     ["/api/internal-users/holidays"] = {
         HR = true,
         CEO = true
+    },
+    ["/api/v1/audits/"] = {
+        CEO=true,
     }
 }
 

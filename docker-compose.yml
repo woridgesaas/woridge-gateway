@@ -82,6 +82,7 @@ services:
 
     networks:
       - woridge-external-network
+      - audit-engine-net
 
     volumes:
       # Mount each plugin directly into Kong's plugin directory
@@ -108,6 +109,8 @@ services:
 
 networks:
   woridge-external-network:
+    external: true
+  audit-engine-net:
     external: true
 volumes:
   kong_data:
