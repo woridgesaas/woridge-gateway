@@ -63,6 +63,8 @@ services:
       JWT_SECRET_KEY: ${JWT_SECRET_KEY}
       AUTH_SERVICE_URL: ${AUTH_SERVICE_URL}
       INTERNAL_SECRET_KEY: ${INTERNAL_SECRET_KEY}
+      TENANT_CHECK_HOST: ${TENANT_CHECK_HOST}
+      KONG_LOG_LEVEL: debug
 
       KONG_PROXY_ACCESS_LOG: /dev/stdout
       KONG_ADMIN_ACCESS_LOG: /dev/stdout
@@ -73,7 +75,7 @@ services:
       KONG_ADMIN_GUI_LISTEN: 0.0.0.0:8002
       KONG_ADMIN_GUI_URL: http://localhost:8002
       KONG_ADMIN_GUI_AUTH: "off"
-
+      
     ports:
       - "8000:8000"
       - "8002:8002"

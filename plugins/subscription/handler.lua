@@ -10,6 +10,9 @@ function SubscriptionPlugin:access(conf)
     local subdomain = kong.request.get_header("X-Subdomain")
 
     local status = tenants[subdomain]
+    if not status and data then
+        status = data.status
+    end
 
     if not status then
         return kong.response.exit(403, {
@@ -17,20 +20,19 @@ function SubscriptionPlugin:access(conf)
         })
     end
 
-    if status ~= "ACTIVE" then
+    if status ~= "ACTIVE" and subdomain == "dev-local" then
         return kong.response.exit(403, {
             message = "Subscription inactive or expired"
         })
     end
 
     if not data or not data.isAccessGranted then
-        return kong.response.exit(403, { 
+        return kong.response.exit(403, {
             message = "Subscription inactive",
             status = data and data.status or "UNKNOWN"
         })
     end
     kong.service.request.set_header("X-Tenant-Status", data.status)
-
 end
 
 return SubscriptionPlugin
