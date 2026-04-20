@@ -6,16 +6,13 @@ SubscriptionPlugin.PRIORITY = 950
 SubscriptionPlugin.VERSION = "1.0"
 
 function SubscriptionPlugin:access(conf)
-
+    local data = kong.ctx.shared.tenant_data
     local subdomain = kong.request.get_header("X-Subdomain")
 
-    if not subdomain then
-        return kong.response.exit(400, {
-            message = "Tenant not found"
-        })
-    end
-
     local status = tenants[subdomain]
+    if not status and data then
+        status = data.status
+    end
 
     if not status then
         return kong.response.exit(403, {
@@ -23,14 +20,19 @@ function SubscriptionPlugin:access(conf)
         })
     end
 
-    if status ~= "ACTIVE" then
+    if status ~= "ACTIVE" and subdomain == "dev-local" then
         return kong.response.exit(403, {
             message = "Subscription inactive or expired"
         })
     end
 
-    kong.service.request.set_header("X-Tenant-Status", status)
-
+    if not data or not data.isAccessGranted then
+        return kong.response.exit(403, {
+            message = "Subscription inactive",
+            status = data and data.status or "UNKNOWN"
+        })
+    end
+    kong.service.request.set_header("X-Tenant-Status", data.status)
 end
 
 return SubscriptionPlugin
