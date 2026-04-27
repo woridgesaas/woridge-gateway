@@ -5,21 +5,37 @@ local AuthorizationPlugin = {}
 AuthorizationPlugin.PRIORITY = 850
 AuthorizationPlugin.VERSION = "1.0"
 
--- * Helper function to check if a string starts with a given prefix
 local function starts_with(str, prefix)
-
     return str:sub(1, #prefix) == prefix
 end
+
+local sorted_routes = {}
+for route, methods in pairs(ROUTE_ACCESS_POLICY) do
+    table.insert(sorted_routes, {
+        route = route,
+        methods = methods
+    })
+end
+table.sort(sorted_routes, function(a, b)
+    return #a.route > #b.route
+end)
 
 function AuthorizationPlugin:access(conf)
 
     local role = kong.request.get_header("X-User-Role")
     local path = kong.request.get_path()
+    local method = kong.request.get_method()
 
-    -- * Check user role against allowed roles for the requested route
-    for route, allowed_roles in pairs(ROUTE_ACCESS_POLICY) do
+    for _, entry in ipairs(sorted_routes) do
 
-        if starts_with(path, route) then
+        if starts_with(path, entry.route) then
+
+            local allowed_roles = entry.methods[method]
+
+            if allowed_roles == nil then
+                break
+            end
+
             if not allowed_roles[role] then
                 return kong.response.exit(403, {
                     timestamp = ngx.time(),
@@ -30,7 +46,6 @@ function AuthorizationPlugin:access(conf)
             break
         end
     end
-
 end
 
 return AuthorizationPlugin

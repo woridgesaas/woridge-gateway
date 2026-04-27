@@ -1,38 +1,225 @@
 local ROUTE_ACCESS_POLICY = {
 
     -- * Authentication microservice (Create users)
+
     ["/api/auth/user"] = {
-        HR = true,
-        CEO = true
+        POST = {
+            HR = true,
+            CEO = true
+        }
     },
 
     -- * Internal users management microservice
+
+    -- * User
+    ["/api/internal-users/user/submit/"] = {
+        POST = {
+            EMPLOYEE = true,
+            MANAGER = true,
+            TECHNICAL = true
+        }
+    },
+
+    ["/api/internal-users/user"] = {
+        POST = {
+            HR = true,
+            CEO = true
+        },
+        PUT = {
+            HR = true,
+            CEO = true
+        },
+        DELETE = {
+            HR = true,
+            CEO = true
+        }
+    },
+
+    -- * Bank Information
+    ["/api/internal-users/bank-informations/submit/"] = {
+        POST = {
+            EMPLOYEE = true,
+            MANAGER = true,
+            TECHNICAL = true
+        }
+    },
+
+    ["/api/internal-users/bank-informations/"] = {
+        POST = {
+            HR = true,
+            CEO = true
+        },
+        PUT = {
+            HR = true,
+            CEO = true
+        }
+    },
+
+    -- * Education
+    ["/api/internal-users/educations/submit/"] = {
+        POST = {
+            EMPLOYEE = true,
+            MANAGER = true,
+            TECHNICAL = true
+        }
+    },
+
+    ["/api/internal-users/educations/"] = {
+        POST = {
+            HR = true,
+            CEO = true
+        },
+        PUT = {
+            HR = true,
+            CEO = true
+        },
+        DELETE = {
+            HR = true,
+            CEO = true
+        }
+    },
+
+    -- * Professional Experiences
+    ["/api/internal-users/professional-experiences/submit/"] = {
+        POST = {
+            EMPLOYEE = true,
+            MANAGER = true,
+            TECHNICAL = true
+        }
+    },
+
+    ["/api/internal-users/professional-experiences/"] = {
+        POST = {
+            HR = true,
+            CEO = true
+        },
+        PUT = {
+            HR = true,
+            CEO = true
+        },
+        DELETE = {
+            HR = true,
+            CEO = true
+        }
+    },
+
+    -- * Profile update requests
+    ["/api/internal-users/profile-update-requests"] = {
+        GET = {
+            HR = true,
+            CEO = true
+        },
+        PATCH = {
+            HR = true,
+            CEO = true
+        }
+    },
+
+    -- * Departments
     ["/api/internal-users/departments"] = {
-        HR = true,
-        CEO = true
+        POST = {
+            HR = true,
+            CEO = true
+        },
+        PUT = {
+            HR = true,
+            CEO = true
+        },
+        DELETE = {
+            HR = true,
+            CEO = true
+        },
+        GET = {
+            HR = true,
+            CEO = true
+        }
     },
 
+    -- * Posts
     ["/api/internal-users/posts"] = {
-        HR = true,
-        CEO = true
+        POST = {
+            HR = true,
+            CEO = true
+        },
+        PUT = {
+            HR = true,
+            CEO = true
+        },
+        DELETE = {
+            HR = true,
+            CEO = true
+        },
+        GET = {
+            HR = true,
+            CEO = true
+        }
     },
 
+    -- * Promotions
     ["/api/internal-users/promotions"] = {
-        HR = true,
-        CEO = true
+        POST = {
+            HR = true,
+            CEO = true
+        },
+        PUT = {
+            HR = true,
+            CEO = true
+        },
+        DELETE = {
+            HR = true,
+            CEO = true
+        },
+        GET = {
+            HR = true,
+            CEO = true
+        }
     },
 
+    -- * Resignations
     ["/api/internal-users/resignations"] = {
-        HR = true,
-        CEO = true
+        POST = {
+            HR = true,
+            CEO = true
+        },
+        PUT = {
+            HR = true,
+            CEO = true
+        },
+        DELETE = {
+            HR = true,
+            CEO = true
+        },
+        GET = {
+            HR = true,
+            CEO = true
+        }
     },
 
+    -- * Holidays
     ["/api/internal-users/holidays"] = {
-        HR = true,
-        CEO = true
+        POST = {
+            HR = true,
+            CEO = true
+        },
+        PUT = {
+            HR = true,
+            CEO = true
+        },
+        DELETE = {
+            HR = true,
+            CEO = true
+        },
+        GET = {
+            HR = true,
+            CEO = true
+        }
     },
-    ["/api/v1/audits/"] = {
-        CEO=true,
+
+    --* Audits
+    ["/api/v1/audits"] = {
+        GET = {
+            CEO = true
+        }
     }
 }
 
