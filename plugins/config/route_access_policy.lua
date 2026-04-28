@@ -215,7 +215,99 @@ local ROUTE_ACCESS_POLICY = {
         }
     },
 
-    --* Audits
+    -- * Settings Management microservice
+
+    -- * Absence justifications
+    ["/api/settings/absence-justifications"] = {
+        GET = {
+            HR = true,
+            CEO = true
+        },
+        PUT = {
+            HR = true,
+            CEO = true
+        }
+    },
+
+    -- * Alert thresholds
+    ["/api/settings/alert-thresholds"] = {
+        GET = {
+            HR = true,
+            CEO = true
+        },
+        PUT = {
+            HR = true,
+            CEO = true
+        }
+
+    },
+
+    -- * Annual leaves
+    ["/api/settings/annual-leaves"] = {
+        GET = {
+            HR = true,
+            CEO = true
+        },
+        PUT = {
+            HR = true,
+            CEO = true
+        }
+    },
+
+    -- * Document templates
+    ["/api/settings/document-templates"] = {
+        POST = {
+            HR = true,
+            CEO = true
+        }
+    },
+
+    ["/api/settings/document-templates/"] = {
+        GET = {
+            HR = true,
+            CEO = true
+        },
+        DELETE = {
+            HR = true,
+            CEO = true
+        }
+    },
+
+    -- * Exceptional leaves
+    ["/api/settings/exceptional-leaves"] = {
+        GET = {
+            HR = true,
+            CEO = true
+        },
+        PUT = {
+            HR = true,
+            CEO = true
+        }
+    },
+
+    -- * Recruitment sites
+    ["/api/settings/recruitment-sites"] = {
+        PUT = {
+            HR = true,
+            CEO = true
+        }
+    },
+
+    -- * Work schedules
+    ["/api/settings/work-schedules"] = {
+        GET = {
+            HR = true,
+            CEO = true
+        },
+        PUT = {
+            HR = true,
+            CEO = true
+        }
+    },
+
+    -- * Logging system microservice
+
+    -- * Audits
     ["/api/v1/audits"] = {
         GET = {
             CEO = true
