@@ -121,12 +121,6 @@ function AuthenticationPlugin:access(conf)
             kong.log.notice("Public route : " .. method .. " " .. path)
             return
         end
-
-        -- * Wrong verb on a public path
-        return kong.response.exit(405, {
-            timestamp = os.date("!%Y-%m-%dT%H:%M:%SZ", ngx.time()),
-            message = "Method not allowed"
-        })
     end
 
     -- * Check Authorization header

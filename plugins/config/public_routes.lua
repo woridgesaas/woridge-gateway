@@ -10,6 +10,14 @@ local PUBLIC_ROUTES = {
     },
     ["/api/auth/reset"] = {
         method = "POST" -- * Reset password
+    },
+
+    -- * Recruitment site
+    ["/api/settings/recruitment-sites"] = {
+        method = "GET"
+    },
+    ["/api/settings/recruitment-sites/logo"] = {
+        method = "GET"
     }
 }
 

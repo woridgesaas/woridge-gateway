@@ -1,7 +1,7 @@
 services:
   # --- 1. DATABASE to store Kong configuration---
   kong-db:
-    image: postgres
+    image: postgres:16
     container_name: woridge-kong_db
     environment:
       POSTGRES_USER: ${POSTGRES_USER}
