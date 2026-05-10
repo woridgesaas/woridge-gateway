@@ -37,6 +37,7 @@ plugins:
     origins:
     - http://localhost:4200
     - http://entreprise.woridge.com:4200
+    - http://localhost:4210
     preflight_continue: false
   enabled: true
   instance_name: Angular_Origin
