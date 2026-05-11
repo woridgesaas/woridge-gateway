@@ -25,6 +25,10 @@ plugins:
     - Accept
     - Origin
     - X-Subdomain
+    - X-User-CIN
+    - X-User-Role
+    - X-Requested-With
+    - X-SignalR-User-Agent
     max_age: 3600
     methods:
     - GET
