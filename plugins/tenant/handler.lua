@@ -7,7 +7,6 @@ TenantPlugin.PRIORITY = 1000
 TenantPlugin.VERSION = "1.0"
 
 function TenantPlugin:access(conf)
-    kong.log.err("local vars : " , hosts)
     local host = kong.request.get_header("Host")
     if not host then
         return kong.response.exit(400, {
